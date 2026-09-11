@@ -5,7 +5,8 @@ from core.config_utils import load_key
 
 # SET PATH
 current_dir = os.path.dirname(os.path.abspath(__file__))
-os.environ['PATH'] += os.pathsep + current_dir
+bin_dir = os.path.dirname(sys.executable)
+os.environ['PATH'] = f"{bin_dir}:/opt/homebrew/bin:/usr/local/bin:{current_dir}" + os.pathsep + os.environ.get('PATH', '')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(page_title="AuraSub", page_icon="docs/logo.svg")
