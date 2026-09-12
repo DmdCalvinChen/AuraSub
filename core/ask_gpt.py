@@ -69,7 +69,7 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
     client = OpenAI(api_key=api_set["key"], base_url=base_url)
     response_format = {"type": "json_object"} if response_json and api_set["model"] in llm_support_json else None
 
-    max_retries = 3
+    max_retries = 4
     for attempt in range(max_retries):
         try:
             completion_args = {
@@ -137,10 +137,9 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
                 
         except Exception as e:
             if attempt < max_retries - 1:
-                error_msg = str(e)
-                if "429" in error_msg or "rpm exhausted" in error_msg.lower():
-                    # Handle rate limit specifically using exponential backoff
-                    sleep_time = 5 * (2 ** attempt)
+                error_msg = str(e).lower()
+                if "429" in error_msg or "rpm" in error_msg or "rate limit" in error_msg or "quota_exceeded" in error_msg:
+                    sleep_time = (attempt + 1) * 15
                     print(f"Rate limit hit (429). Retrying in {sleep_time}s ({attempt + 1}/{max_retries})...")
                     time.sleep(sleep_time)
                 elif isinstance(e, RequestException):
