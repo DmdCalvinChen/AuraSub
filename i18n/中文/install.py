@@ -95,14 +95,22 @@ def main():
     choose_mirror()
 
     # 检测系统和GPU
-    has_gpu = platform.system() != 'Darwin' and check_nvidia_gpu()
-    if has_gpu:
+    is_darwin = platform.system() == 'Darwin'
+    is_mac_apple_silicon = is_darwin and platform.machine() == 'arm64'
+    has_nvidia_gpu = not is_darwin and check_nvidia_gpu()
+
+    if is_mac_apple_silicon:
+        console.print(Panel("🍎 检测到 Apple Silicon Mac (M系列芯片): 正在安装 PyTorch (MPS) 与 MLX-Whisper 硬件加速支持...", style="cyan"))
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchaudio", "mlx", "mlx-whisper"])
+    elif is_darwin:
+        console.print(Panel("❌ 不支持的架构：AuraSub 暂不支持 Intel Mac (x86_64)。\n因缺乏 Apple Silicon 统一内存与 Metal MLX 硬件加速，Intel Mac 推理性能极慢。请使用 M1/M2/M3/M4 系列 Mac 或配备 NVIDIA 显卡的 Windows 电脑。", style="bold red"))
+        sys.exit(1)
+    elif has_nvidia_gpu:
         console.print(Panel("🎮 检测到 NVIDIA GPU，正在安装 CUDA 版本的 PyTorch...", style="cyan"))
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.0.0", "torchaudio==2.0.0", "--index-url", "https://download.pytorch.org/whl/cu118"])
     else:
-        system_name = "🍎 MacOS" if platform.system() == 'Darwin' else "💻 未检测到 NVIDIA GPU"
-        console.print(Panel(f"{system_name}，正在安装 CPU 版本的 PyTorch... 但转写速度会慢很多", style="cyan"))
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.1.2", "torchaudio==2.1.2"])
+        console.print(Panel("💻 未检测到 NVIDIA GPU，正在安装 CPU 版本的 PyTorch（注：强烈推荐配备独显以获得最佳转录体验）。", style="yellow"))
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchaudio"])
 
     def install_requirements():
         try:

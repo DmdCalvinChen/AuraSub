@@ -41,18 +41,28 @@
 **翻译与配音：**
 翻译支持所有主流 LLM 所涵盖的语言。配音语言的支持情况取决于您所选择的 TTS 接口类型。
 
+## 💻 官方支持平台与硬件要求
+
+AuraSub 专为现代硬件加速与高精度推理而设计，官方优先支持以下两大计算平台：
+
+| 平台类型 | 硬件加速方案 | 最低/推荐要求 |
+| :--- | :--- | :--- |
+| 🍎 **Apple Silicon Mac** | Metal GPU / 统一内存 (`MLX-Whisper` + PyTorch `MPS`) | M1 / M2 / M3 / M4 系列芯片，macOS 13+ |
+| 🎮 **Windows** | NVIDIA CUDA 硬件加速 (`WhisperX` + CTranslate2) | NVIDIA 独立显卡（GTX 1060+ / RTX 系列，建议 6GB+ 显存） |
+
+> ⚠️ **重要提示**：**不再支持 Intel 架构 Mac (x86_64)**。因缺乏 Apple Silicon 统一内存与 Metal MLX 支持，CPU 转写推理性能极低，请使用 M 系列 Mac 或搭载 NVIDIA 显卡的 Windows 设备。
+
 ## 安装
 
-> **注意:** 在 Windows 上使用 NVIDIA GPU 加速需要先完成以下步骤:
+> **注意 (Windows NVIDIA GPU 用户):** 需要先完成以下步骤以启用 CUDA 加速：
 > 1. 安装 [CUDA Toolkit 12.6](https://developer.download.nvidia.com/compute/cuda/12.6.0/local_installers/cuda_12.6.0_560.76_windows.exe)
 > 2. 安装 [CUDNN 9.3.0](https://developer.download.nvidia.com/compute/cudnn/9.3.0/local_installers/cudnn_9.3.0_windows.exe)
 > 3. 将 `C:\Program Files\NVIDIA\CUDNN\v9.3\bin\12.6` 添加到系统环境变量 PATH 中
 > 4. 重启电脑
 
-> **注意:** FFmpeg 是必需的，请通过包管理器安装：
-> - Windows：```choco install ffmpeg```（通过 [Chocolatey](https://chocolatey.org/)）
-> - macOS：```brew install ffmpeg```（通过 [Homebrew](https://brew.sh/)）
-> - Linux：```sudo apt install ffmpeg```（Debian/Ubuntu）或 ```sudo dnf install ffmpeg```（Fedora）
+> **注意 (必须安装 FFmpeg):** 请通过包管理器安装：
+> - macOS：```brew install ffmpeg```（通过 [Homebrew](https://brew.sh/))
+> - Windows：```choco install ffmpeg```（通过 [Chocolatey](https://chocolatey.org/))
 
 1. 克隆仓库
 

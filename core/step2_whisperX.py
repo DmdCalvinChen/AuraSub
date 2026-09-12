@@ -65,12 +65,14 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     whisper_language = None if 'auto' in str(WHISPER_LANGUAGE) else WHISPER_LANGUAGE
 
     use_mlx = False
-    if is_mac_apple_silicon():
+    if platform.system() == "Darwin":
+        if not is_mac_apple_silicon():
+            raise RuntimeError("❌ AuraSub 在 macOS 平台仅支持 Apple Silicon (M1/M2/M3/M4 系列芯片)。暂不支持 Intel Mac。")
         try:
             import mlx_whisper
             use_mlx = True
         except ImportError:
-            use_mlx = False
+            raise RuntimeError("❌ 未检测到 mlx-whisper，请在 Apple Silicon Mac 环境中运行: pip install mlx mlx-whisper")
 
     if use_mlx:
         device = "mlx_gpu"

@@ -95,18 +95,21 @@ def main():
     choose_mirror()
 
     # Detect system and GPU
-    is_mac_apple_silicon = platform.system() == 'Darwin' and platform.machine() == 'arm64'
-    has_nvidia_gpu = platform.system() != 'Darwin' and check_nvidia_gpu()
+    is_darwin = platform.system() == 'Darwin'
+    is_mac_apple_silicon = is_darwin and platform.machine() == 'arm64'
+    has_nvidia_gpu = not is_darwin and check_nvidia_gpu()
 
     if is_mac_apple_silicon:
-        console.print(Panel("🍎 Apple Silicon (Mac GPU) detected: Installing PyTorch (MPS) & MLX-Whisper for hardware acceleration...", style="cyan"))
+        console.print(Panel("🍎 Apple Silicon Mac (M-Series GPU) detected: Installing PyTorch (MPS) & MLX-Whisper for hardware acceleration...", style="cyan"))
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchaudio", "mlx", "mlx-whisper"])
+    elif is_darwin:
+        console.print(Panel("❌ Unsupported Architecture: Intel Mac (x86_64) is not supported.\nAuraSub requires Apple Silicon (M1/M2/M3/M4) for Metal Unified Memory acceleration or a Windows PC with an NVIDIA GPU.", style="bold red"))
+        sys.exit(1)
     elif has_nvidia_gpu:
         console.print(Panel("🎮 NVIDIA GPU detected, installing CUDA version of PyTorch...", style="cyan"))
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.0.0", "torchaudio==2.0.0", "--index-url", "https://download.pytorch.org/whl/cu118"])
     else:
-        system_name = "🍎 Intel MacOS" if platform.system() == 'Darwin' else "💻 No NVIDIA GPU"
-        console.print(Panel(f"{system_name} detected, installing CPU version of PyTorch...", style="cyan"))
+        console.print(Panel("💻 No NVIDIA GPU detected. Installing CPU version of PyTorch (Note: GPU is strongly recommended for transcription performance).", style="yellow"))
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchaudio"])
 
     def install_requirements():

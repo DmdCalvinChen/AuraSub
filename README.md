@@ -42,18 +42,28 @@ While the original project relies on traditional NLP algorithms for sentence bre
 **Translation & Dubbing:**
 Translation supports practically all languages powered by leading LLMs. Dubbing support depends on the chosen TTS provider.
 
+## 💻 Supported Platforms & Requirements
+
+AuraSub is optimized for high-performance neural inference and officially supports two primary hardware platforms:
+
+| Platform | Hardware Acceleration | Requirements |
+| :--- | :--- | :--- |
+| 🍎 **Apple Silicon Mac** | Metal GPU / Unified Memory (`MLX-Whisper` + PyTorch `MPS`) | M1 / M2 / M3 / M4 Series, macOS 13+ |
+| 🎮 **Windows** | NVIDIA CUDA (`WhisperX` + CTranslate2) | NVIDIA GPU (GTX 1060+ / RTX Series, 6GB+ VRAM) |
+
+> ⚠️ **Notice**: **Intel-based Macs (x86_64) are NOT supported** due to the absence of Apple Unified Memory and MLX Metal acceleration.
+
 ## Installation
 
-> **Note:** To use NVIDIA GPU acceleration on Windows, please complete the following steps first:
+> **Note (Windows with NVIDIA GPU):** Please complete the following steps first:
 > 1. Install [CUDA Toolkit 12.6](https://developer.download.nvidia.com/compute/cuda/12.6.0/local_installers/cuda_12.6.0_560.76_windows.exe)
 > 2. Install [CUDNN 9.3.0](https://developer.download.nvidia.com/compute/cudnn/9.3.0/local_installers/cudnn_9.3.0_windows.exe)
 > 3. Add `C:\Program Files\NVIDIA\CUDNN\v9.3\bin\12.6` to your system PATH
 > 4. Restart your computer
 
-> **Note:** FFmpeg is required. Please install it via package managers:
-> - Windows: ```choco install ffmpeg``` (via [Chocolatey](https://chocolatey.org/))
+> **Note (FFmpeg Required):** Install via package manager:
 > - macOS: ```brew install ffmpeg``` (via [Homebrew](https://brew.sh/))
-> - Linux: ```sudo apt install ffmpeg``` (Debian/Ubuntu) or ```sudo dnf install ffmpeg``` (Fedora)
+> - Windows: ```choco install ffmpeg``` (via [Chocolatey](https://chocolatey.org/))
 
 1. Clone the repository
 
