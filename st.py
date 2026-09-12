@@ -70,7 +70,13 @@ def process_text():
     with st.spinner("Summarizing and translating..."):
         step4_1_summarize.get_summary()
         if load_key("pause_before_translate"):
-            input("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue...")
+            st.warning("⚠️ PAUSE_BEFORE_TRANSLATE is enabled. Please edit `output/log/terminology.json` in the sidebar or file explorer, then click 'Continue Translation' below.")
+            st.session_state.setdefault('translation_paused', True)
+            if st.session_state.get('translation_paused', False):
+                if st.button("Continue Translation", key="continue_translate"):
+                    st.session_state['translation_paused'] = False
+                    st.rerun()
+                st.stop()
         step4_2_translate_all.translate_all()
     with st.spinner("Processing and aligning subtitles..."): 
         step6_generate_final_timeline.align_timestamp_main()

@@ -40,17 +40,15 @@ if ! command -v conda >/dev/null 2>&1; then
     exit 1
 fi
 
-# 2. 检查并激活虚拟环境 (优先 aurasub_mac，其次 aurasub)
+# 2. 检查并激活虚拟环境
 TARGET_ENV=""
-if conda info --envs | grep -E "(^|[[:space:]])aurasub_mac([[:space:]]|$)" >/dev/null 2>&1; then
-    TARGET_ENV="aurasub_mac"
-elif conda info --envs | grep -E "(^|[[:space:]])aurasub([[:space:]]|$)" >/dev/null 2>&1; then
+if conda info --envs | grep -E "(^|[[:space:]])aurasub([[:space:]]|$)" >/dev/null 2>&1; then
     TARGET_ENV="aurasub"
 fi
 
 if [ -z "$TARGET_ENV" ]; then
     echo ""
-    echo "⚠️ 未检测到虚拟环境 'aurasub' 或 'aurasub_mac'！"
+    echo "⚠️ 未检测到虚拟环境 'aurasub'！"
     echo ""
     echo "👉 请先在终端中执行以下命令完成初始化："
     echo "   1. conda create -n aurasub python=3.10.0 -y"

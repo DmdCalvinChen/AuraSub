@@ -111,15 +111,3 @@ def update_key(key: str, new_value: Any) -> bool:
             return True
         else:
             raise KeyError(f"Key '{keys[-1]}' not found in configuration")
-        
-# basic utils
-def get_joiner(language):
-    if language in load_key('language_split_with_space'):
-        return " "
-    elif language in load_key('language_split_without_space'):
-        return ""
-    else:
-        raise ValueError(f"Unsupported language code: {language}")
-
-if __name__ == "__main__":
-    print(load_key('language_split_with_space'))

@@ -71,7 +71,13 @@ def process_text():
     with st.spinner("总结和翻译中..."):
         step4_1_summarize.get_summary()
         if load_key("pause_before_translate"):
-            input("⚠️ 翻译前暂停。请前往 `output/log/terminology.json` 编辑术语。完成后按回车继续...")
+            st.warning("⚠️ 翻译前暂停已开启。请编辑 `output/log/terminology.json` 中的术语表，完成后点击下方按钮继续。")
+            st.session_state.setdefault('translation_paused', True)
+            if st.session_state.get('translation_paused', False):
+                if st.button("继续翻译", key="continue_translate"):
+                    st.session_state['translation_paused'] = False
+                    st.rerun()
+                st.stop()
         step4_2_translate_all.translate_all()
     with st.spinner("处理和对齐字幕中..."): 
         from core import step6_generate_final_timeline

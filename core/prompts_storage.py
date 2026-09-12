@@ -2,38 +2,6 @@ import os,sys,json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
 
-## ================================================================
-# @ step4_splitbymeaning.py
-def get_split_prompt(sentence, num_parts = 2, word_limit = 20):
-    language = load_key("whisper.detected_language")
-    split_prompt = f"""
-### Role
-You are a professional Netflix subtitle splitter in {language}.
-
-### Task
-Split the given subtitle text into {num_parts} parts, each less than {word_limit} words.
-
-### Instructions
-1. Maintain sentence meaning coherence according to Netflix subtitle standards
-2. Keep parts roughly equal in length (minimum 3 words each)
-3. Split at natural points like punctuation marks or conjunctions
-4. If provided text is repeated words, simply split at the middle of the repeated words.
-
-### Output Format in JSON
-{{
-    "analysis": "Brief analysis of the text structure",
-    "split": "Complete sentence with [br] tags at split positions"
-}}
-
-### Given Text
-<split_this_sentence>
-{sentence}
-</split_this_sentence>
-
-### Your Answer, Provide ONLY a valid JSON object:
-""".strip()
-    return split_prompt
-
 
 ## ================================================================
 # @ step4_1_summarize.py
@@ -107,7 +75,7 @@ For the provided {src_lang} video text:
     return summary_prompt
 
 ## ================================================================
-# @ step5_translate.py & translate_lines.py
+# @ step4_2_translate_all.py & translate_once.py
 def generate_shared_prompt(previous_content_prompt, after_content_prompt, summary_prompt, things_to_note_prompt):
     return f'''### Context Information
 <previous_content>
@@ -219,62 +187,6 @@ Please use a two-step thinking process to handle the text line by line:
 '''
     return prompt_expressiveness.strip()
 
-
-## ================================================================
-# @ step6_splitforsub.py
-def get_align_prompt(src_sub, tr_sub, src_part):
-    TARGET_LANGUAGE = load_key("target_language")
-    src_language = load_key("whisper.detected_language")
-    src_splits = src_part.split('\n')
-    num_parts = len(src_splits)
-    src_part = src_part.replace('\n', ' [br] ')
-    align_prompt = '''
-### Role Definition
-You are a Netflix subtitle alignment expert fluent in both {src_language} and {target_language}.
-
-### Task Background
-We have {src_language} and {target_language} original subtitles for a Netflix program, as well as a pre-processed split version of {src_language} subtitles. Your task is to create the best splitting scheme for the {target_language} subtitles based on this information.
-
-### Task Description
-1. Analyze the word order and structural correspondence between {src_language} and {target_language} subtitles
-2. Split the {target_language} subtitles according to the pre-processed {src_language} split version
-3. Never leave empty lines. If it's difficult to split based on meaning, you may appropriately rewrite the sentences that need to be aligned
-4. Do not add comments or explanations in the translation, as the subtitles are for the audience to read
-
-### Subtitle Data
-<subtitles>
-{src_language} Original: "{src_sub}"
-{target_language} Original: "{tr_sub}"
-Pre-processed {src_language} Subtitles ([br] indicates split points): {src_part}
-</subtitles>
-
-### Output in JSON
-{{
-    "analysis": "Brief analysis of word order, structure, and semantic correspondence between {src_language} and {target_language} subtitles",
-    "align": [
-        {align_parts_json}
-    ]
-}}
-
-### Your Answer, Provide ONLY a valid JSON object:
-'''
-
-    align_parts_json = ','.join(
-        f'''
-        {{
-            "src_part_{i+1}": "{src_splits[i]}",
-            "target_part_{i+1}": "Corresponding aligned {TARGET_LANGUAGE} subtitle part"
-        }}''' for i in range(num_parts)
-    )
-
-    return align_prompt.format(
-        src_language=src_language,
-        target_language=TARGET_LANGUAGE,
-        src_sub=src_sub,
-        tr_sub=tr_sub,
-        src_part=src_part,
-        align_parts_json=align_parts_json,
-    )
 
 ## ================================================================
 # @ step8_gen_audio_task.py @ step10_gen_audio.py

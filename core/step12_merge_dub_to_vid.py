@@ -9,7 +9,7 @@ from rich import print as rprint
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.all_whisper_methods.demucs_vl import BACKGROUND_AUDIO_FILE
-from core.step7_merge_sub_to_vid import get_video_encoder, check_gpu_available
+from core.step7_merge_sub_to_vid import get_video_encoder
 from core.config_utils import load_key
 from core.step1_ytdlp import find_video_files
 

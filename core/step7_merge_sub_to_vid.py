@@ -27,13 +27,6 @@ SRC_SRT = f"{OUTPUT_DIR}/src.srt"
 TRANS_SRT = f"{OUTPUT_DIR}/trans.srt"
 COMBINED_ASS = f"{OUTPUT_DIR}/combined.ass"
 
-def check_gpu_available():
-    """Check if NVIDIA NVENC hardware encoder is available."""
-    try:
-        result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True, errors='ignore')
-        return 'h264_nvenc' in result.stdout
-    except Exception:
-        return False
 
 def get_video_encoder():
     """Detect available hardware video encoder (VideoToolbox for Mac, NVENC for NVIDIA)."""
@@ -157,7 +150,7 @@ def merge_subtitles_to_video():
             f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
             f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
             f"ass={ass_path}"
-        ).encode('utf-8'),
+        ),
     ]
 
     encoder_name, encoder_args = get_video_encoder()
@@ -248,7 +241,7 @@ def generate_preview_frame(target_size, source_size):
             f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
             f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
             f"ass={ass_path}"
-        ).encode('utf-8'),
+        ),
         '-vframes', '1',
         '-y', OUTPUT_PREVIEW
     ]
