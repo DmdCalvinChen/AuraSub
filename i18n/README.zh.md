@@ -80,18 +80,14 @@ python install.py
 ```
 
 3. 启动应用
+- **方式一：双击一键启动（推荐）**
+  - macOS：在访达中直接双击运行 [`OneKeyStart.command`](../OneKeyStart.command)
+  - Windows：在文件资源管理器中直接双击运行 [`OneKeyStart.bat`](../OneKeyStart.bat)
 
-```bash
-streamlit run st.py
-```
-
-### Docker
-还可以选择使用 Docker（要求 CUDA 12.4 和 NVIDIA Driver 版本 >550）：
-
-```bash
-docker build -t aurasub .
-docker run -d -p 8501:8501 --gpus all aurasub
-```
+- **方式二：终端命令行启动**
+  ```bash
+  streamlit run st.py
+  ```
 
 ## 📝 自定义术语与 ASR 纠错
 AuraSub 拥有强大的基于上下文的发音纠错能力（如将 "to" 自动纠正为 "two"）。如果你有强相关的垂直领域专业术语，可以通过以下步骤进一步提升准确率：

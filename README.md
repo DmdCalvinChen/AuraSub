@@ -82,17 +82,14 @@ python install.py
 
 3. Start the application
 
-```bash
-streamlit run st.py
-```
+- **Option A (Double-Click - Recommended)**:
+  - macOS: Double-click [`OneKeyStart.command`](OneKeyStart.command) in Finder.
+  - Windows: Double-click [`OneKeyStart.bat`](OneKeyStart.bat) in File Explorer.
 
-### Docker
-Alternatively, you can use Docker (requires CUDA 12.4 and NVIDIA Driver version >550):
-
-```bash
-docker build -t aurasub .
-docker run -d -p 8501:8501 --gpus all aurasub
-```
+- **Option B (Terminal)**:
+  ```bash
+  streamlit run st.py
+  ```
 
 ## 📝 Custom Terminology & ASR Correction
 AuraSub features a powerful context-based phonetic correction engine. While it can automatically fix common misheard words, providing a domain-specific glossary will significantly enhance accuracy:
