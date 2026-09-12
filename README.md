@@ -19,6 +19,15 @@ While the original project relies on traditional NLP algorithms for sentence bre
 - **📚 Optimized Terminology without Pollution:** Incorporates exact regex word-boundary matching during the translation phase. This allows the LLM to use your glossary accurately without being overwhelmed by massive "full-text terminology injections," effectively eliminating context pollution.
 - **🪡 Robust Two-Pointer Alignment:** A custom alignment engine mathematically matches translated blocks back to their precise word-level audio timestamps, entirely avoiding the missing timeline issues of previous iterations.
 - **🧠 Two-Tier Reasoning Control:** Allows configuring different reasoning intensities (e.g., `low`, `medium`, `high` via API request bodies) for hard vs. easy tasks in the WebUI to maximize translation quality and cost-efficiency.
+- **🍪 Modernized Video Downloader with Cookie & Deno Support:**
+  - **Cookie Management:** WebUI supports uploading Netscape-format `cookie.txt` (any filename) to seamlessly bypass YouTube bot verification, 403 Forbidden, and login/age restrictions.
+  - **Auto-Updating yt-dlp Engine:** Automatically checks and upgrades to the latest PyPI release on startup.
+  - **Deno JS Dynamic Decryption:** Native Deno integration solves YouTube `n-challenge` dynamic signature decoding without bandwidth throttling.
+  - **Multi-Resolution Selector:** Choose between 1080p (default), Best Quality (4K/2K), 720p, 480p, with crystal-clear status and error diagnostics.
+- **🍎 Apple Silicon Mac Hardware Acceleration & One-Click Start:**
+  - Integrated **MLX-Whisper** engine utilizing Metal GPU and Unified Memory for ultra-fast local inference.
+  - Forced alignment accelerated via PyTorch MPS (Metal Performance Shaders).
+  - macOS Finder double-clickable `OneKeyStart.command` automatically discovers Conda paths and activates the environment.
 - **🎨 Subtitle Style & Real-Time Preview:** Features a dedicated customization block for adjusting font sizes. Employs a unified ASS subtitle generation scheme for zero-overlap double-line text, and renders single-frame previews of the longest sentences instantly without repeating the translation workflow.
 - **✅ Netflix-Standard Exclusivity:** Enforces strict single-line subtitles only, guaranteeing a clean, professional viewing experience.
 - **🎙️ Advanced Dubbing:** Seamless integration with GPT-SoVITS, Azure, OpenAI TTS, and more for one-click multilingual dubbing.

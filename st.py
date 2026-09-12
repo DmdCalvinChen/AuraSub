@@ -11,6 +11,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(page_title="AuraSub", page_icon="docs/logo.svg")
 
+@st.cache_resource(show_spinner=False)
+def auto_check_ytdlp():
+    from core.step1_ytdlp import check_and_update_ytdlp
+    return check_and_update_ytdlp(force=False, timeout=3)
+
+auto_check_ytdlp()
+
 SUB_VIDEO = "output/output_sub.mp4"
 DUB_VIDEO = "output/output_dub.mp4"
 

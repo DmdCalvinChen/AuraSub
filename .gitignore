@@ -179,3 +179,9 @@ custom_terms.xlsx
 generate_terms.py
 .secret
 
+# Cookies
+cookies.txt
+cookie.txt
+*.cookie
+
+

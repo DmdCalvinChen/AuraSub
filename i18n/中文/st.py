@@ -5,10 +5,19 @@ from core.config_utils import load_key
 
 # SET PATH
 current_dir = os.path.dirname(os.path.abspath(__file__))
-os.environ['PATH'] += os.pathsep + current_dir
+bin_dir = os.path.dirname(sys.executable)
+os.environ['PATH'] = f"{bin_dir}:/opt/homebrew/bin:/usr/local/bin:{current_dir}" + os.pathsep + os.environ.get('PATH', '')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(page_title="AuraSub", page_icon="docs/logo.svg")
+
+@st.cache_resource(show_spinner=False)
+def auto_check_ytdlp():
+    from core.step1_ytdlp import check_and_update_ytdlp
+    return check_and_update_ytdlp(force=False, timeout=3)
+
+auto_check_ytdlp()
 
 SUB_VIDEO = "output/output_sub.mp4"
 DUB_VIDEO = "output/output_dub.mp4"

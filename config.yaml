@@ -4,7 +4,7 @@ version: "2.1.2"
 # API settings (⚠️ WARNING: Do not put real API keys here! Create a .secret file in the root directory instead. See .secret_template for reference)
 api:
   key: 'not here'
-  base_url: 'https://api.openai.com/v1'
+  base_url: 'https://token.sensenova.cn/v1'
   model: 'deepseek-v4-flash'
 
 # Language settings, written into the prompt, can be described in natural language
@@ -21,7 +21,7 @@ whisper:
   detected_language: 'en'
 
 # Video resolution [0x0, 640x360, 1920x1080]  0x0 will generate a 0-second black video placeholder
-resolution: '0x0'
+resolution: '1920x1080'
 
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
@@ -169,6 +169,6 @@ language_split_without_space:
 - 'ja'
 
 reasoning:
-  hard_tasks: 'medium'
+  hard_tasks: 'high'
   easy_tasks: 'low'
 
