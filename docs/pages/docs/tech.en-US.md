@@ -10,7 +10,7 @@ The following are the core technical modules and workflow of the system:
    - `core/step1_ytdlp.py`: Integrates a modernized `yt-dlp` engine supporting Netscape-format Cookie authentication (bypassing bot checks and restrictions), Deno JS dynamic decryption acceleration, PyPI startup auto-updates, multi-resolution selection (1080p/4K/720p), and filename sanitization.
 
 2. **Audio Processing and Speech Recognition Module**:
-   - `core/step2_whisper.py`: Orchestrates speech recognition and word-level timestamp extraction.
+   - `core/step2_whisperX.py`: Orchestrates speech recognition and word-level timestamp extraction.
    - `core/all_whisper_methods/mlx_whisper.py`: Dedicated Apple Silicon Mac engine utilizing Metal GPU and Unified Memory for ultra-fast local inference, combined with PyTorch MPS forced alignment.
    - `core/all_whisper_methods/whisperX.py`: Windows NVIDIA CUDA platform engine based on WhisperX + CTranslate2.
    - `core/all_whisper_methods/whisperXapi.py`: Replicate cloud-based WhisperX API implementation.

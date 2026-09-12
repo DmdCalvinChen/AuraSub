@@ -10,7 +10,7 @@ AuraSub 是一个面向专业内容、高度集成的智能视频翻译系统，
    - `core/step1_ytdlp.py`: 集成现代化 `yt-dlp` 引擎，支持 Netscape 格式 Cookie 认证绕过防盗链与限制、Deno JS 动态解密加速、PyPI 启动自动更新自检，支持 1080p/4K/720p 多档画质与文件名安全清理。
 
 2. **音频处理与语音识别模块 (Audio & ASR)**:
-   - `core/step2_whisper.py`: 统一调度语音识别与词级时间戳提取。
+   - `core/step2_whisperX.py`: 统一调度语音识别与词级时间戳提取。
    - `core/all_whisper_methods/mlx_whisper.py`: Apple Silicon Mac 专属引擎，利用 Metal GPU 与统一内存实现极速转录，并结合 PyTorch MPS 进行高精度强制对齐。
    - `core/all_whisper_methods/whisperX.py`: Windows NVIDIA CUDA 平台引擎，基于 WhisperX + CTranslate2 框架进行转录与对齐。
    - `core/all_whisper_methods/whisperXapi.py`: 基于 Replicate 云端 API 的 WhisperX 转录实现。
