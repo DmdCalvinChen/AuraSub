@@ -73,7 +73,6 @@ def process_text():
             input("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue...")
         step4_2_translate_all.translate_all()
     with st.spinner("Processing and aligning subtitles..."): 
-        # step5_splitforsub.split_for_sub_main()  # Replaced by robust logic upstream
         step6_generate_final_timeline.align_timestamp_main()
     
     st.success("Text processing complete! 🎉")

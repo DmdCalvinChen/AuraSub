@@ -28,11 +28,25 @@ TRANS_SRT = f"{OUTPUT_DIR}/trans.srt"
 COMBINED_ASS = f"{OUTPUT_DIR}/combined.ass"
 
 def check_gpu_available():
+    """Check if NVIDIA NVENC hardware encoder is available."""
     try:
-        result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True)
+        result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True, errors='ignore')
         return 'h264_nvenc' in result.stdout
-    except:
+    except Exception:
         return False
+
+def get_video_encoder():
+    """Detect available hardware video encoder (VideoToolbox for Mac, NVENC for NVIDIA)."""
+    try:
+        result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True, errors='ignore')
+        encoders_str = result.stdout
+        if platform.system() == 'Darwin' and 'h264_videotoolbox' in encoders_str:
+            return 'h264_videotoolbox', ['-c:v', 'h264_videotoolbox', '-b:v', '8000k']
+        elif 'h264_nvenc' in encoders_str:
+            return 'h264_nvenc', ['-c:v', 'h264_nvenc']
+    except Exception:
+        pass
+    return 'libx264', ['-c:v', 'libx264']
 
 def parse_srt(srt_path):
     """Parse an SRT file and return a list of (index, start_time, end_time, text) tuples."""
@@ -146,12 +160,15 @@ def merge_subtitles_to_video():
         ).encode('utf-8'),
     ]
 
-    gpu_available = check_gpu_available()
-    if gpu_available:
-        rprint("[bold green]NVIDIA GPU encoder detected, will use GPU acceleration.[/bold green]")
-        ffmpeg_cmd.extend(['-c:v', 'h264_nvenc'])
+    encoder_name, encoder_args = get_video_encoder()
+    if encoder_name == 'h264_videotoolbox':
+        rprint("[bold green]Apple Silicon VideoToolbox hardware encoder detected, will use Apple GPU acceleration.[/bold green]")
+    elif encoder_name == 'h264_nvenc':
+        rprint("[bold green]NVIDIA GPU encoder (NVENC) detected, will use GPU acceleration.[/bold green]")
     else:
-        rprint("[bold yellow]No NVIDIA GPU encoder detected, will use CPU instead.[/bold yellow]")
+        rprint("[bold yellow]No hardware GPU encoder detected, using CPU encoder (libx264).[/bold yellow]")
+    
+    ffmpeg_cmd.extend(encoder_args)
     
     ffmpeg_cmd.extend(['-y', OUTPUT_VIDEO])
 

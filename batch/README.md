@@ -1,4 +1,4 @@
-# VideoLingo Batch Mode
+# AuraSub Batch Mode
 
 [English](./README.md) | [简体中文](./README.zh.md)
 

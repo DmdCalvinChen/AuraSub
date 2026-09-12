@@ -19,7 +19,6 @@ json-repair
 ruamel.yaml
 autocorrect-py
 edge-tts
-spacy>=3.7.0
 
 demucs[dev] @ git+https://github.com/adefossez/demucs
 whisperx @ git+https://github.com/m-bain/whisperx.git

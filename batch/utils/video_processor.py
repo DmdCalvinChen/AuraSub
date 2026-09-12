@@ -89,8 +89,10 @@ def process_input_file(file):
 
 def split_sentences():
     from core import step2_5_add_punctuation
+    from core import step2_6_asr_correction
     from core import step3_semantic_chunking
     step2_5_add_punctuation.add_punctuation_main()
+    step2_6_asr_correction.asr_correction_main()
     step3_semantic_chunking.split_by_semantic_chunking()
 
 def summarize_and_translate():
@@ -98,7 +100,6 @@ def summarize_and_translate():
     step4_2_translate_all.translate_all()
 
 def process_and_align_subtitles():
-    # step5_splitforsub is deprecated under the new semantic chunking model
     step6_generate_final_timeline.align_timestamp_main()
 
 def gen_audio_tasks():

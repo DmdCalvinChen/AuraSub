@@ -2,16 +2,15 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core import (
     # Download & Transcribe 📥
-    step11_merge_full_audio,
     step1_ytdlp,
     step2_whisperX,
+    step2_5_add_punctuation,
+    step2_6_asr_correction,
     
     # Text Processing & Analysis 📝
-    step3_1_spacy_split,
-    step3_2_splitbymeaning,
+    step3_semantic_chunking,
     step4_1_summarize,
     step4_2_translate_all,
-    step5_splitforsub,
     
     # Subtitle Timeline & Merging 🎬
     step6_generate_final_timeline,
@@ -22,6 +21,7 @@ from core import (
     step8_2_gen_dub_chunks,
     step9_extract_refer_audio,
     step10_gen_audio,
+    step11_merge_full_audio,
     
     # Final Video Composition 🎥
     step12_merge_dub_to_vid

@@ -141,17 +141,6 @@ llm_support_json:
 # - 'Qwen/Qwen2.5-Coder-32B-Instruct'
 # - 'Qwen/Qwen2.5-Chat-72B-Instruct-128K'
 
-# Spacy 模型
-spacy_model_map:
-  en: 'en_core_web_md'
-  ru: 'ru_core_news_md'
-  fr: 'fr_core_news_md'
-  ja: 'ja_core_news_md'
-  es: 'es_core_news_md'
-  de: 'de_core_news_md'
-  it: 'it_core_news_md'
-  zh: 'zh_core_web_md'
-
 # 使用空格作为分隔符的语言
 language_split_with_space:
 - 'en'
