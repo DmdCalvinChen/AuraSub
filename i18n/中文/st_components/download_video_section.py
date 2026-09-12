@@ -53,6 +53,7 @@ def download_video_section():
                     if cookie_info['exists']:
                         if st.button("🗑️ 清除 Cookie", key="clear_cookie_btn", use_container_width=True):
                             delete_cookie_file()
+                            st.session_state['last_uploaded_cookie'] = None
                             st.session_state['cookie_msg'] = "Cookie 凭证已清除。"
                             st.rerun()
 
@@ -62,13 +63,16 @@ def download_video_section():
                     key="cookie_uploader",
                     help="使用浏览器扩展（如 Get cookies.txt LOCALLY）导出 YouTube 的 cookie.txt 并上传即可。"
                 )
-                if uploaded_cookie:
-                    try:
-                        save_uploaded_cookie(uploaded_cookie.getvalue())
-                        st.session_state['cookie_msg'] = "✅ Cookie 凭证上传成功并已生效！"
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"保存 Cookie 失败: {e}")
+                if uploaded_cookie is not None:
+                    cookie_id = f"{uploaded_cookie.name}_{uploaded_cookie.size}"
+                    if st.session_state.get('last_uploaded_cookie') != cookie_id:
+                        try:
+                            save_uploaded_cookie(uploaded_cookie.getvalue())
+                            st.session_state['last_uploaded_cookie'] = cookie_id
+                            st.session_state['cookie_msg'] = "✅ Cookie 凭证上传成功并已生效！"
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"保存 Cookie 失败: {e}")
 
                 col_e1, col_e2 = st.columns([2, 1])
                 with col_e1:

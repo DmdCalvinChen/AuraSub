@@ -54,6 +54,7 @@ def download_video_section():
                     if cookie_info['exists']:
                         if st.button("🗑️ Clear Cookie", key="clear_cookie_btn", use_container_width=True):
                             delete_cookie_file()
+                            st.session_state['last_uploaded_cookie'] = None
                             st.session_state['cookie_msg'] = "Cookie has been cleared."
                             st.rerun()
 
@@ -63,13 +64,16 @@ def download_video_section():
                     key="cookie_uploader",
                     help="Export your cookies (e.g. via 'Get cookies.txt LOCALLY' extension) and upload here."
                 )
-                if uploaded_cookie:
-                    try:
-                        save_uploaded_cookie(uploaded_cookie.getvalue())
-                        st.session_state['cookie_msg'] = "✅ Cookie uploaded and saved successfully!"
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to save cookie: {e}")
+                if uploaded_cookie is not None:
+                    cookie_id = f"{uploaded_cookie.name}_{uploaded_cookie.size}"
+                    if st.session_state.get('last_uploaded_cookie') != cookie_id:
+                        try:
+                            save_uploaded_cookie(uploaded_cookie.getvalue())
+                            st.session_state['last_uploaded_cookie'] = cookie_id
+                            st.session_state['cookie_msg'] = "✅ Cookie uploaded and saved successfully!"
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to save cookie: {e}")
 
                 col_e1, col_e2 = st.columns([2, 1])
                 with col_e1:

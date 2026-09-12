@@ -1,6 +1,4 @@
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from st_components.imports_and_utils import ask_gpt
+from core.ask_gpt import ask_gpt
 import streamlit as st
 from core.config_utils import update_key, load_key
 

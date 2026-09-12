@@ -27,6 +27,10 @@ resolution: '1920x1080'
 # *下载 YouTube 视频的默认分辨率 [360, 1080, best]
 ytb_resolution: '1080'
 
+subtitle:
+  target_font_size: 16
+  source_font_size: 8
+
 # *总结长度，如果使用本地 LLM 设置为 2k
 summary_length: 8000
 
