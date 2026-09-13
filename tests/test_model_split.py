@@ -1,11 +1,12 @@
 import os
 import sys
 import unittest
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.config_utils import load_key, update_key, is_sensitive_key
-from core.ask_gpt import check_is_hard_task, resolve_api_config, check_api
+from core.ask_gpt import check_is_hard_task, resolve_api_config, check_api, ask_gpt
 
 class TestModelSplitConfig(unittest.TestCase):
     def test_sensitive_keys_detection(self):
@@ -96,6 +97,46 @@ class TestModelSplitConfig(unittest.TestCase):
         self.assertEqual(url, load_key("api.base_url"))
         self.assertEqual(model, load_key("api.model"))
         
+        update_key("model_split.enabled", False)
+
+    @patch("core.ask_gpt.OpenAI")
+    def test_ask_gpt_dispatch_and_reasoning_effort(self, mock_openai_cls):
+        mock_client = MagicMock()
+        mock_openai_cls.return_value = mock_client
+        
+        mock_completion = MagicMock()
+        mock_completion.choices = [MagicMock(message=MagicMock(content='{"status": "ok"}'))]
+        mock_completion.usage = None
+        mock_client.chat.completions.create.return_value = mock_completion
+        
+        # 1. Enable split mode
+        update_key("model_split.enabled", True)
+        update_key("model_split.hard_tasks.model", "deepseek-reasoner")
+        update_key("model_split.hard_tasks.base_url", "https://api.deepseek.com/v1")
+        update_key("model_split.hard_tasks.reasoning_effort", "high")
+        
+        update_key("model_split.easy_tasks.model", "deepseek-chat")
+        update_key("model_split.easy_tasks.base_url", "https://api.deepseek.com/v1")
+        update_key("model_split.easy_tasks.reasoning_effort", "none")
+        
+        # Call hard task
+        with patch("core.ask_gpt.check_ask_gpt_history", return_value=False):
+            with patch("core.ask_gpt.save_log"):
+                res_h = ask_gpt("chunk this text", response_json=True, log_title="logical_chunking")
+                self.assertEqual(res_h, {"status": "ok"})
+                call_kwargs_h = mock_client.chat.completions.create.call_args[1]
+                self.assertEqual(call_kwargs_h["model"], "deepseek-reasoner")
+                self.assertEqual(call_kwargs_h["extra_body"], {"reasoning_effort": "high"})
+                
+                # Call easy task
+                res_e = ask_gpt("summarize this", response_json=True, log_title="summary")
+                self.assertEqual(res_e, {"status": "ok"})
+                call_kwargs_e = mock_client.chat.completions.create.call_args[1]
+                self.assertEqual(call_kwargs_e["model"], "deepseek-chat")
+                # When reasoning_effort is none, extra_body should not be injected
+                self.assertNotIn("extra_body", call_kwargs_e)
+
+        # Cleanup
         update_key("model_split.enabled", False)
 
 if __name__ == "__main__":
