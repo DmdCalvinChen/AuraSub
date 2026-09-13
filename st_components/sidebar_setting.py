@@ -1,11 +1,14 @@
-from core.ask_gpt import ask_gpt
+from core.ask_gpt import ask_gpt, check_api
 import streamlit as st
 from core.config_utils import update_key, load_key
 
-def config_input(label, key, help=None):
+def config_input(label, key, help=None, placeholder=None):
     """Generic config input handler"""
-    val = st.text_input(label, value=load_key(key), help=help)
-    if val != load_key(key):
+    curr_val = load_key(key)
+    if curr_val is None:
+        curr_val = ""
+    val = st.text_input(label, value=str(curr_val), help=help, placeholder=placeholder)
+    if val != str(curr_val):
         update_key(key, val)
     return val
 
@@ -18,38 +21,100 @@ def page_setting():
         with c1:
             config_input("MODEL", "api.model", help="click to check API validity 👉")
         with c2:
-            if st.button("📡", key="api"):
-                st.toast("API Key is valid" if check_api() else "API Key is invalid", 
-                        icon="✅" if check_api() else "❌")
+            if st.button("📡", key="api_base_btn", help="Test Base API connection"):
+                st.toast("Base API Key is valid" if check_api("base") else "Base API Key is invalid", 
+                        icon="✅" if check_api("base") else "❌")
         
         st.markdown("---")
-        st.markdown("**🧠 Thinking / Reasoning Effort**")
+        
+        # Advanced Multi-Model Task Splitting
+        curr_split = bool(load_key("model_split.enabled"))
+        split_enabled = st.toggle(
+            "🎛️ Advanced Multi-Model Configuration",
+            value=curr_split,
+            help="Configure separate providers, models, keys, and reasoning efforts for Hard Tasks vs Easy Tasks"
+        )
+        if split_enabled != curr_split:
+            update_key("model_split.enabled", split_enabled)
+            st.rerun()
+            
         reasoning_options = ["none", "low", "medium", "high"]
         
-        r1, r2 = st.columns(2)
-        with r1:
-            curr_hard = load_key("reasoning.hard_tasks") or "high"
-            hard_tasks_effort = st.selectbox(
-                "Hard Tasks", 
+        if not split_enabled:
+            st.markdown("**🧠 Thinking / Reasoning Effort**")
+            r1, r2 = st.columns(2)
+            with r1:
+                curr_hard = load_key("reasoning.hard_tasks") or "high"
+                hard_tasks_effort = st.selectbox(
+                    "Hard Tasks", 
+                    options=reasoning_options,
+                    index=reasoning_options.index(curr_hard) if curr_hard in reasoning_options else 2,
+                    help="Chunking, ASR Correction, Expressive Translation, Punctuation"
+                )
+                if hard_tasks_effort != curr_hard:
+                    update_key("reasoning.hard_tasks", hard_tasks_effort)
+                    
+            with r2:
+                curr_easy = load_key("reasoning.easy_tasks") or "low"
+                easy_tasks_effort = st.selectbox(
+                    "Easy Tasks", 
+                    options=reasoning_options,
+                    index=reasoning_options.index(curr_easy) if curr_easy in reasoning_options else 1,
+                    help="Summarization, Direct Translation"
+                )
+                if easy_tasks_effort != curr_easy:
+                    update_key("reasoning.easy_tasks", easy_tasks_effort)
+                    
+            st.caption("⚠️ **Tip:** Not recommended to use `high`. Translation tasks are not that complex.")
+        else:
+            # Hard Tasks Section
+            st.markdown("##### 🧠 Hard Tasks Model")
+            st.caption("For Semantic Chunking, ASR Correction, Expressive Translation, Punctuation")
+            config_input("Hard Tasks API_KEY", "model_split.hard_tasks.key", placeholder="Leave empty to use Base API_KEY")
+            config_input("Hard Tasks BASE_URL", "model_split.hard_tasks.base_url", placeholder="Leave empty to use Base BASE_URL")
+            
+            hc1, hc2 = st.columns([4, 1])
+            with hc1:
+                config_input("Hard Tasks MODEL", "model_split.hard_tasks.model", placeholder="e.g. o3-mini, deepseek-reasoner")
+            with hc2:
+                if st.button("📡", key="api_hard_btn", help="Test Hard Tasks API"):
+                    st.toast("Hard Tasks API is valid" if check_api("hard") else "Hard Tasks API is invalid", 
+                            icon="✅" if check_api("hard") else "❌")
+                            
+            curr_h_effort = load_key("model_split.hard_tasks.reasoning_effort") or "high"
+            h_effort = st.selectbox(
+                "Hard Tasks Reasoning Effort",
                 options=reasoning_options,
-                index=reasoning_options.index(curr_hard) if curr_hard in reasoning_options else 2,
-                help="Chunking, ASR Correction, Expressive Translation, Punctuation"
+                index=reasoning_options.index(curr_h_effort) if curr_h_effort in reasoning_options else 3,
+                key="hard_tasks_split_effort"
             )
-            if hard_tasks_effort != curr_hard:
-                update_key("reasoning.hard_tasks", hard_tasks_effort)
+            if h_effort != curr_h_effort:
+                update_key("model_split.hard_tasks.reasoning_effort", h_effort)
                 
-        with r2:
-            curr_easy = load_key("reasoning.easy_tasks") or "low"
-            easy_tasks_effort = st.selectbox(
-                "Easy Tasks", 
+            st.markdown("---")
+            # Easy Tasks Section
+            st.markdown("##### ⚡ Easy Tasks Model")
+            st.caption("For Direct Translation, Video Summary, Subtitle Trim")
+            config_input("Easy Tasks API_KEY", "model_split.easy_tasks.key", placeholder="Leave empty to use Base API_KEY")
+            config_input("Easy Tasks BASE_URL", "model_split.easy_tasks.base_url", placeholder="Leave empty to use Base BASE_URL")
+            
+            ec1, ec2 = st.columns([4, 1])
+            with ec1:
+                config_input("Easy Tasks MODEL", "model_split.easy_tasks.model", placeholder="e.g. gpt-4o-mini, deepseek-chat")
+            with ec2:
+                if st.button("📡", key="api_easy_btn", help="Test Easy Tasks API"):
+                    st.toast("Easy Tasks API is valid" if check_api("easy") else "Easy Tasks API is invalid", 
+                            icon="✅" if check_api("easy") else "❌")
+                            
+            curr_e_effort = load_key("model_split.easy_tasks.reasoning_effort") or "low"
+            e_effort = st.selectbox(
+                "Easy Tasks Reasoning Effort",
                 options=reasoning_options,
-                index=reasoning_options.index(curr_easy) if curr_easy in reasoning_options else 1,
-                help="Summarization, Direct Translation"
+                index=reasoning_options.index(curr_e_effort) if curr_e_effort in reasoning_options else 1,
+                key="easy_tasks_split_effort"
             )
-            if easy_tasks_effort != curr_easy:
-                update_key("reasoning.easy_tasks", easy_tasks_effort)
-                
-        st.caption("⚠️ **Tip:** Not recommended to use `high`. Translation tasks are not that complex.")
+            if e_effort != curr_e_effort:
+                update_key("model_split.easy_tasks.reasoning_effort", e_effort)
     
     with st.expander("Subtitles Settings", expanded=True):
         c1, c2 = st.columns(2)
@@ -159,11 +224,3 @@ def page_setting():
                 update_key("gpt_sovits.refer_mode", selected_refer_mode)
         elif select_tts == "edge_tts":
             config_input("Edge TTS Voice", "edge_tts.voice")
-
-def check_api():
-    try:
-        resp = ask_gpt("This is a test, response 'message':'success' in json format.", 
-                      response_json=True, log_title='None')
-        return resp.get('message') == 'success'
-    except Exception:
-        return False
