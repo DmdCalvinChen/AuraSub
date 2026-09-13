@@ -160,12 +160,12 @@ model_split:
   hard_tasks:
     key: 'not here'
     base_url: 'https://token.sensenova.cn/v1'
-    model: ''
+    model: 'kimi-k3'
     reasoning_effort: 'high'
   easy_tasks:
     key: 'not here'
-    base_url: ''
-    model: ''
+    base_url: 'https://token.sensenova.cn/v1'
+    model: 'deepseek-v4-flash'
     reasoning_effort: 'low'
 
 
