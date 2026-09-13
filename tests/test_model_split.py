@@ -9,6 +9,28 @@ from core.config_utils import load_key, update_key, is_sensitive_key
 from core.ask_gpt import check_is_hard_task, resolve_api_config, check_api, ask_gpt
 
 class TestModelSplitConfig(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Save snapshot of config
+        cls._orig_enabled = load_key("model_split.enabled")
+        cls._orig_hard_model = load_key("model_split.hard_tasks.model")
+        cls._orig_hard_url = load_key("model_split.hard_tasks.base_url")
+        cls._orig_hard_effort = load_key("model_split.hard_tasks.reasoning_effort")
+        cls._orig_easy_model = load_key("model_split.easy_tasks.model")
+        cls._orig_easy_url = load_key("model_split.easy_tasks.base_url")
+        cls._orig_easy_effort = load_key("model_split.easy_tasks.reasoning_effort")
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore snapshot
+        update_key("model_split.enabled", cls._orig_enabled)
+        update_key("model_split.hard_tasks.model", cls._orig_hard_model)
+        update_key("model_split.hard_tasks.base_url", cls._orig_hard_url)
+        update_key("model_split.hard_tasks.reasoning_effort", cls._orig_hard_effort)
+        update_key("model_split.easy_tasks.model", cls._orig_easy_model)
+        update_key("model_split.easy_tasks.base_url", cls._orig_easy_url)
+        update_key("model_split.easy_tasks.reasoning_effort", cls._orig_easy_effort)
+
     def test_sensitive_keys_detection(self):
         self.assertTrue(is_sensitive_key("api.key"))
         self.assertTrue(is_sensitive_key("model_split.hard_tasks.key"))
@@ -83,9 +105,6 @@ class TestModelSplitConfig(unittest.TestCase):
         self.assertEqual(url_e, "https://api.openai.com/v1")
         self.assertEqual(model_e, "gpt-4o-mini")
         self.assertEqual(effort_e, "none")
-        
-        # Reset enabled to False
-        update_key("model_split.enabled", False)
 
     def test_resolve_api_config_fallback_when_fields_empty(self):
         update_key("model_split.enabled", True)
@@ -96,8 +115,6 @@ class TestModelSplitConfig(unittest.TestCase):
         self.assertEqual(key, load_key("api.key"))
         self.assertEqual(url, load_key("api.base_url"))
         self.assertEqual(model, load_key("api.model"))
-        
-        update_key("model_split.enabled", False)
 
     @patch("core.ask_gpt.OpenAI")
     def test_ask_gpt_dispatch_and_reasoning_effort(self, mock_openai_cls):
@@ -135,9 +152,6 @@ class TestModelSplitConfig(unittest.TestCase):
                 self.assertEqual(call_kwargs_e["model"], "deepseek-chat")
                 # When reasoning_effort is none, extra_body should not be injected
                 self.assertNotIn("extra_body", call_kwargs_e)
-
-        # Cleanup
-        update_key("model_split.enabled", False)
 
 if __name__ == "__main__":
     unittest.main()
