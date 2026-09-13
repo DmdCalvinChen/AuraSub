@@ -39,19 +39,101 @@ def check_ask_gpt_history(prompt, model, log_title):
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             for item in data:
-                if item["prompt"] == prompt:
-                    return item["response"]
+                if item.get("prompt") == prompt:
+                    return item.get("response")
     return False
 
+def check_is_hard_task(log_title: str) -> bool:
+    """Determine if the task is a hard reasoning task based on log_title."""
+    if not log_title:
+        return False
+    hard_titles = ['logical_chunking', 'translate_expressiveness', 'sentence_splitbymeaning', 'punctuation']
+    return any(t in log_title for t in hard_titles) or log_title.startswith('asr_correction')
+
+def resolve_api_config(is_hard: bool):
+    """
+    Resolve API key, base_url, model, and reasoning_effort based on task difficulty and split config.
+    Returns: (api_key, base_url, model, reasoning_effort)
+    """
+    base_api = load_key("api")
+    is_split_enabled = False
+    try:
+        is_split_enabled = bool(load_key("model_split.enabled"))
+    except Exception:
+        is_split_enabled = False
+
+    if is_split_enabled:
+        split_key = "model_split.hard_tasks" if is_hard else "model_split.easy_tasks"
+        try:
+            task_cfg = load_key(split_key) or {}
+            raw_key = task_cfg.get("key")
+            api_key = raw_key if raw_key and raw_key != 'not here' else base_api.get("key")
+            base_url = task_cfg.get("base_url") or base_api.get("base_url")
+            model = task_cfg.get("model") or base_api.get("model")
+            effort = task_cfg.get("reasoning_effort")
+            if not effort:
+                effort = "high" if is_hard else "low"
+            return api_key, base_url, model, effort
+        except Exception:
+            pass
+
+    # Fallback to base configuration
+    effort_key = "reasoning.hard_tasks" if is_hard else "reasoning.easy_tasks"
+    try:
+        effort = load_key(effort_key)
+    except Exception:
+        effort = "high" if is_hard else "low"
+    return base_api.get("key"), base_api.get("base_url"), base_api.get("model"), effort
+
+def check_api(target="base") -> bool:
+    """Test API connection for base, hard, or easy task model configuration."""
+    try:
+        base_api = load_key("api")
+        if target == "hard":
+            cfg = load_key("model_split.hard_tasks") or {}
+        elif target == "easy":
+            cfg = load_key("model_split.easy_tasks") or {}
+        else:
+            cfg = base_api
+            
+        raw_key = cfg.get("key")
+        api_key = raw_key if raw_key and raw_key != 'not here' else base_api.get("key")
+        base_url = cfg.get("base_url") or base_api.get("base_url")
+        model = cfg.get("model") or base_api.get("model")
+        
+        if not api_key or api_key == 'not here':
+            return False
+            
+        url = base_url.strip('/') + '/v1' if 'v1' not in base_url else base_url
+        client = OpenAI(api_key=api_key, base_url=url, timeout=10.0)
+        
+        llm_support_json = load_key("llm_support_json")
+        response_format = {"type": "json_object"} if model in llm_support_json else None
+        
+        completion_args = {
+            "model": model,
+            "messages": [{"role": "user", "content": "Respond with {'message':'success'} in json format"}],
+        }
+        if response_format is not None:
+            completion_args["response_format"] = response_format
+            
+        resp = client.chat.completions.create(**completion_args)
+        return True
+    except Exception as e:
+        print(f"API Check failed for [{target}]: {e}")
+        return False
+
 def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', reasoning_effort='medium'):
-    api_set = load_key("api")
     llm_support_json = load_key("llm_support_json")
+    is_hard = check_is_hard_task(log_title)
+    api_key, base_url, model, configured_effort = resolve_api_config(is_hard)
+    
     with LOCK:
-        history_response = check_ask_gpt_history(prompt, api_set["model"], log_title)
+        history_response = check_ask_gpt_history(prompt, model, log_title)
         if history_response:
             return history_response
     
-    if not api_set["key"]:
+    if not api_key or api_key == 'not here':
         raise ValueError(f"⚠️API_KEY is missing")
     
     # SenseNova's JSON parsing requires system prompt to instruct JSON output
@@ -65,34 +147,28 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
         {"role": "user", "content": prompt}
     ]
     
-    base_url = api_set["base_url"].strip('/') + '/v1' if 'v1' not in api_set["base_url"] else api_set["base_url"]
-    client = OpenAI(api_key=api_set["key"], base_url=base_url)
-    response_format = {"type": "json_object"} if response_json and api_set["model"] in llm_support_json else None
+    url = base_url.strip('/') + '/v1' if 'v1' not in base_url else base_url
+    client = OpenAI(api_key=api_key, base_url=url)
+    response_format = {"type": "json_object"} if response_json and model in llm_support_json else None
 
     max_retries = 4
     for attempt in range(max_retries):
         try:
             completion_args = {
-                "model": api_set["model"],
+                "model": model,
                 "messages": messages
             }
             if response_format is not None:
                 completion_args["response_format"] = response_format
                 
-            # Determine reasoning effort based on task difficulty
-            hard_titles = ['logical_chunking', 'translate_expressiveness', 'sentence_splitbymeaning', 'punctuation']
-            is_hard = any(t in log_title for t in hard_titles) or log_title.startswith('asr_correction')
-            
-            configured_effort = load_key("reasoning.hard_tasks") if is_hard else load_key("reasoning.easy_tasks")
-            
-            if configured_effort and configured_effort.lower() != "none":
+            if configured_effort and str(configured_effort).lower() != "none":
                 # Use extra_body to bypass OpenAI Python SDK version validation errors
                 # This works for both native OpenAI models (like o1) and proxies (like DeepSeek)
-                completion_args["extra_body"] = {"reasoning_effort": configured_effort}
+                completion_args["extra_body"] = {"reasoning_effort": str(configured_effort).lower()}
                     
             if attempt == 0:
                 task_type = "🧠 Hard Task" if is_hard else "⚡ Easy Task"
-                print(f"[{task_type}] Using reasoning effort: {configured_effort}")
+                print(f"[{task_type}] Target: {url} | Model: {model} | Reasoning: {configured_effort}")
                 
             response = client.chat.completions.create(**completion_args)
             
@@ -117,14 +193,14 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
                     if valid_def:
                         valid_response = valid_def(response_data)
                         if valid_response['status'] != 'success':
-                            save_log(api_set["model"], prompt, response_data, log_title="error", message=valid_response['message'])
+                            save_log(model, prompt, response_data, log_title="error", message=valid_response['message'])
                             raise ValueError(f"Validation failed: {valid_response['message']}")
                         
                     break  # Successfully accessed and parsed, break the loop
                 except Exception as e:
                     response_content = response.choices[0].message.content
                     print(f"❎ JSON or Validation failed. Retrying: '''{response_content}'''")
-                    save_log(api_set["model"], prompt, response_content, log_title="error", message=str(e))
+                    save_log(model, prompt, response_content, log_title="error", message=str(e))
                     
                     messages.append({"role": "assistant", "content": response_content})
                     messages.append({"role": "user", "content": f"Your previous response failed: {str(e)}\nPlease carefully review the rules, ensure NO words are modified, added, or removed, and try again."})
@@ -152,10 +228,9 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
                 raise Exception(f"Still failed after {max_retries} attempts: {e}")
     with LOCK:
         if log_title != 'None':
-            save_log(api_set["model"], prompt, response_data, log_title=log_title)
+            save_log(model, prompt, response_data, log_title=log_title)
 
     return response_data
-
 
 if __name__ == '__main__':
     print(ask_gpt('hi there hey response in json format, just return 200.' , response_json=True, log_title=None))
