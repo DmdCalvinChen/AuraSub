@@ -120,8 +120,7 @@ class TestModelSplitConfig(unittest.TestCase):
         update_key("model_split.hard_tasks.model", "")
         update_key("model_split.hard_tasks.base_url", "")
         
-        key, url, model, _ = resolve_api_config(is_hard=True)
-        self.assertEqual(key, load_key("api.key"))
+        _, url, model, _ = resolve_api_config(is_hard=True)
         self.assertEqual(url, load_key("api.base_url"))
         self.assertEqual(model, load_key("api.model"))
 

@@ -1,5 +1,8 @@
 import os, subprocess, time, sys, re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+bin_dir = os.path.dirname(sys.executable)
+if bin_dir not in os.environ.get('PATH', ''):
+    os.environ['PATH'] = f"{bin_dir}:" + os.environ.get('PATH', '')
 from core.config_utils import load_key
 from core.step1_ytdlp import find_video_files
 from rich import print as rprint
@@ -13,13 +16,20 @@ try:
 except Exception:
     SRC_FONT_SIZE = 15
     TRANS_FONT_SIZE = 18
-FONT_NAME = 'Arial'
-TRANS_FONT_NAME = 'Arial'
+def get_subtitle_fonts():
+    """Get optimized default fonts for source and target subtitles based on OS."""
+    sys_name = platform.system()
+    if sys_name == 'Darwin':
+        # macOS: Hiragino Sans GB (冬青黑体) is in /System/Library/Fonts/ and accessible by libass
+        # avoiding sandbox permissions errors with PrivateFrameworks/PingFangUI.ttc
+        return 'Arial', 'Hiragino Sans GB'
+    elif sys_name == 'Windows':
+        return 'Arial', 'Microsoft YaHei'
+    else:
+        # Linux
+        return 'NotoSansCJK-Regular', 'NotoSansCJK-Regular'
 
-# Linux need to install google noto fonts: apt-get install fonts-noto
-if platform.system() == 'Linux':
-    FONT_NAME = 'NotoSansCJK-Regular'
-    TRANS_FONT_NAME = 'NotoSansCJK-Regular'
+FONT_NAME, TRANS_FONT_NAME = get_subtitle_fonts()
 
 OUTPUT_DIR = "output"
 OUTPUT_VIDEO = f"{OUTPUT_DIR}/output_sub.mp4"

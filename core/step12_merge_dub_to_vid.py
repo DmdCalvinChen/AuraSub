@@ -8,8 +8,11 @@ import cv2
 from rich import print as rprint
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+bin_dir = os.path.dirname(sys.executable)
+if bin_dir not in os.environ.get('PATH', ''):
+    os.environ['PATH'] = f"{bin_dir}:" + os.environ.get('PATH', '')
 from core.all_whisper_methods.demucs_vl import BACKGROUND_AUDIO_FILE
-from core.step7_merge_sub_to_vid import get_video_encoder
+from core.step7_merge_sub_to_vid import get_video_encoder, get_subtitle_fonts
 from core.config_utils import load_key
 from core.step1_ytdlp import find_video_files
 
@@ -18,9 +21,7 @@ DUB_SUB_FILE = 'output/dub.srt'
 DUB_AUDIO = 'output/dub.mp3'
 
 TRANS_FONT_SIZE = 20
-TRANS_FONT_NAME = 'Arial'
-if platform.system() == 'Linux':
-    TRANS_FONT_NAME = 'NotoSansCJK-Regular'
+_, TRANS_FONT_NAME = get_subtitle_fonts()
 
 TRANS_FONT_COLOR = '&H00FFFF'
 TRANS_OUTLINE_COLOR = '&H000000'
