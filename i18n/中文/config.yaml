@@ -150,3 +150,23 @@ language_split_with_space:
 language_split_without_space:
 - 'zh'
 - 'ja'
+
+# 推理强度设置
+reasoning:
+  hard_tasks: 'medium'
+  easy_tasks: 'low'
+
+# 高低难度任务独立多模型与推理配置
+model_split:
+  enabled: false
+  hard_tasks:
+    key: 'not here'
+    base_url: ''
+    model: ''
+    reasoning_effort: 'high'
+  easy_tasks:
+    key: 'not here'
+    base_url: ''
+    model: ''
+    reasoning_effort: 'low'
+

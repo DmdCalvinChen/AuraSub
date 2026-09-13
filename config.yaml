@@ -152,6 +152,20 @@ language_split_without_space:
 - 'ja'
 
 reasoning:
-  hard_tasks: 'high'
+  hard_tasks: 'medium'
   easy_tasks: 'low'
+
+model_split:
+  enabled: false
+  hard_tasks:
+    key: 'not here'
+    base_url: ''
+    model: ''
+    reasoning_effort: 'high'
+  easy_tasks:
+    key: 'not here'
+    base_url: ''
+    model: ''
+    reasoning_effort: 'low'
+
 
