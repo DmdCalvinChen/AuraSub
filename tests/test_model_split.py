@@ -53,6 +53,15 @@ class TestModelSplitConfig(unittest.TestCase):
         self.assertIn("base_url", easy_tasks)
         self.assertIn("reasoning_effort", easy_tasks)
 
+    def test_recursive_secret_merge(self):
+        # Even when .secret has model_split.hard_tasks.key, sibling keys must still exist
+        base_url = load_key("model_split.hard_tasks.base_url")
+        model = load_key("model_split.hard_tasks.model")
+        effort = load_key("model_split.hard_tasks.reasoning_effort")
+        self.assertIsNotNone(base_url)
+        self.assertIsNotNone(model)
+        self.assertIsNotNone(effort)
+
     def test_task_difficulty_classification(self):
         self.assertTrue(check_is_hard_task("logical_chunking"))
         self.assertTrue(check_is_hard_task("asr_correction_1"))

@@ -156,10 +156,10 @@ reasoning:
   easy_tasks: 'low'
 
 model_split:
-  enabled: false
+  enabled: true
   hard_tasks:
     key: 'not here'
-    base_url: ''
+    base_url: 'https://token.sensenova.cn/v1'
     model: ''
     reasoning_effort: 'high'
   easy_tasks:

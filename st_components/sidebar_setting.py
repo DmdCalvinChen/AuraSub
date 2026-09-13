@@ -4,7 +4,10 @@ from core.config_utils import update_key, load_key
 
 def config_input(label, key, help=None, placeholder=None):
     """Generic config input handler"""
-    curr_val = load_key(key)
+    try:
+        curr_val = load_key(key)
+    except KeyError:
+        curr_val = ""
     if curr_val is None:
         curr_val = ""
     val = st.text_input(label, value=str(curr_val), help=help, placeholder=placeholder)

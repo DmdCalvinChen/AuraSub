@@ -11,21 +11,28 @@ config_lock = threading.Lock()
 yaml = YAML()
 yaml.preserve_quotes = True
 
+def deep_merge(target: dict, source: dict):
+    """Recursively merge source dict into target dict in-place."""
+    for k, v in source.items():
+        if k in target and isinstance(target[k], dict) and isinstance(v, dict):
+            deep_merge(target[k], v)
+        else:
+            target[k] = v
+
 def load_key(key: str) -> Any:
     with config_lock:
         with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
-            data = yaml.load(file)
+            data = yaml.load(file) or {}
             
         secret_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.secret')
         if os.path.exists(secret_path):
-            with open(secret_path, 'r', encoding='utf-8') as f:
-                secret_data = yaml.load(f)
-                if secret_data:
-                    for k, v in secret_data.items():
-                        if k in data and isinstance(data[k], dict) and isinstance(v, dict):
-                            data[k].update(v)
-                        else:
-                            data[k] = v
+            try:
+                with open(secret_path, 'r', encoding='utf-8') as f:
+                    secret_data = yaml.load(f)
+                    if secret_data and isinstance(secret_data, dict):
+                        deep_merge(data, secret_data)
+            except Exception as e:
+                print(f"Notice loading secret file: {e}")
 
     keys = key.split('.')
     value = data
@@ -95,19 +102,15 @@ def update_key(key: str, new_value: Any) -> bool:
 
         # 2. Non-sensitive Keys: update config.yaml
         with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
-            data = yaml.load(file)
+            data = yaml.load(file) or {}
 
         current = data
         for k in keys[:-1]:
-            if isinstance(current, dict) and k in current:
-                current = current[k]
-            else:
-                return False
+            if k not in current or not isinstance(current[k], dict):
+                current[k] = {}
+            current = current[k]
 
-        if isinstance(current, dict) and keys[-1] in current:
-            current[keys[-1]] = new_value
-            with open(CONFIG_PATH, 'w', encoding='utf-8') as file:
-                yaml.dump(data, file)
-            return True
-        else:
-            raise KeyError(f"Key '{keys[-1]}' not found in configuration")
+        current[keys[-1]] = new_value
+        with open(CONFIG_PATH, 'w', encoding='utf-8') as file:
+            yaml.dump(data, file)
+        return True
