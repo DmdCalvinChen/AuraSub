@@ -129,7 +129,17 @@ allowed_audio_formats:
 llm_support_json:
 - 'gpt-4o'
 - 'gpt-4o-mini'
+- 'gemini-3.8-flash'
+- 'gemini-3.7-flash'
+- 'gemini-3.6-flash'
+- 'gemini-flash-latest'
+- 'gemini-pro-latest'
+- 'gemini-2.5-flash'
+- 'gemini-2.5-pro'
+- 'gemini-2.0-flash'
 - 'gemini-2.0-flash-exp'
+- 'deepseek-chat'
+- 'deepseek-reasoner'
 - 'deepseek-coder'
 
 # 存在问题

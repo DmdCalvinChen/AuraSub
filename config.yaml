@@ -129,7 +129,17 @@ allowed_audio_formats:
 llm_support_json:
 - 'gpt-4o'
 - 'gpt-4o-mini'
+- 'gemini-3.8-flash'
+- 'gemini-3.7-flash'
+- 'gemini-3.6-flash'
+- 'gemini-flash-latest'
+- 'gemini-pro-latest'
+- 'gemini-2.5-flash'
+- 'gemini-2.5-pro'
+- 'gemini-2.0-flash'
 - 'gemini-2.0-flash-exp'
+- 'deepseek-chat'
+- 'deepseek-reasoner'
 - 'deepseek-coder'
 
 # have problems
@@ -159,8 +169,8 @@ model_split:
   enabled: true
   hard_tasks:
     key: 'not here'
-    base_url: 'https://token.sensenova.cn/v1'
-    model: 'kimi-k3'
+    base_url: 'https://generativelanguage.googleapis.com/v1beta/openai/'
+    model: 'gemini-3.8-flash'
     reasoning_effort: 'high'
   easy_tasks:
     key: 'not here'

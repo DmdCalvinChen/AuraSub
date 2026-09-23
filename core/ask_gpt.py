@@ -85,6 +85,39 @@ def resolve_api_config(is_hard: bool):
         effort = "high" if is_hard else "low"
     return base_api.get("key"), base_api.get("base_url"), base_api.get("model"), effort
 
+def normalize_base_url(base_url: str) -> str:
+    """Normalize base_url for different providers (e.g. Google AI Studio, standard OpenAI proxies)."""
+    if not base_url:
+        return base_url
+    base_url = base_url.strip()
+    if "generativelanguage.googleapis.com" in base_url:
+        if not base_url.endswith("/"):
+            base_url += "/"
+        if "openai" not in base_url:
+            base_url = base_url.rstrip("/")
+            if not base_url.endswith("v1beta"):
+                base_url = base_url.rstrip("/") + "/v1beta"
+            base_url = base_url + "/openai/"
+        return base_url
+    
+    url = base_url.strip('/') + '/v1' if 'v1' not in base_url else base_url
+    return url
+
+def check_llm_support_json(model: str) -> bool:
+    """Check if model natively supports response_format={'type': 'json_object'}."""
+    if not model:
+        return False
+    try:
+        configured_models = load_key("llm_support_json") or []
+        if model in configured_models:
+            return True
+    except Exception:
+        pass
+    
+    model_lower = model.lower()
+    auto_families = ["gemini", "gpt-4", "gpt-3.5", "o1", "o3", "o4", "deepseek", "claude", "qwen"]
+    return any(fam in model_lower for fam in auto_families)
+
 def check_api(target="base") -> bool:
     """Test API connection for base, hard, or easy task model configuration."""
     try:
@@ -104,11 +137,10 @@ def check_api(target="base") -> bool:
         if not api_key or api_key == 'not here':
             return False
             
-        url = base_url.strip('/') + '/v1' if 'v1' not in base_url else base_url
+        url = normalize_base_url(base_url)
         client = OpenAI(api_key=api_key, base_url=url, timeout=10.0)
         
-        llm_support_json = load_key("llm_support_json")
-        response_format = {"type": "json_object"} if model in llm_support_json else None
+        response_format = {"type": "json_object"} if check_llm_support_json(model) else None
         
         completion_args = {
             "model": model,
@@ -124,7 +156,6 @@ def check_api(target="base") -> bool:
         return False
 
 def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', reasoning_effort='medium'):
-    llm_support_json = load_key("llm_support_json")
     is_hard = check_is_hard_task(log_title)
     api_key, base_url, model, configured_effort = resolve_api_config(is_hard)
     
@@ -147,9 +178,9 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
         {"role": "user", "content": prompt}
     ]
     
-    url = base_url.strip('/') + '/v1' if 'v1' not in base_url else base_url
+    url = normalize_base_url(base_url)
     client = OpenAI(api_key=api_key, base_url=url)
-    response_format = {"type": "json_object"} if response_json and model in llm_support_json else None
+    response_format = {"type": "json_object"} if response_json and check_llm_support_json(model) else None
 
     max_retries = 4
     for attempt in range(max_retries):
@@ -161,10 +192,11 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
             if response_format is not None:
                 completion_args["response_format"] = response_format
                 
-            if configured_effort and str(configured_effort).lower() != "none":
-                # Use extra_body to bypass OpenAI Python SDK version validation errors
-                # This works for both native OpenAI models (like o1) and proxies (like DeepSeek)
-                completion_args["extra_body"] = {"reasoning_effort": str(configured_effort).lower()}
+            if configured_effort:
+                effort_str = str(configured_effort).lower().strip()
+                if effort_str in ["none", "low", "medium", "high"]:
+                    # Pass via extra_body (compatible with OpenAI o-series, DeepSeek, Google Gemini OpenAI compat)
+                    completion_args["extra_body"] = {"reasoning_effort": effort_str}
                     
             if attempt == 0:
                 task_type = "🧠 Hard Task" if is_hard else "⚡ Easy Task"
@@ -175,13 +207,21 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default', rea
             if hasattr(response, 'usage') and response.usage:
                 try:
                     usage_dict = response.usage.model_dump()
+                    prompt_tokens = usage_dict.get('prompt_tokens', 0) or 0
+                    completion_tokens = usage_dict.get('completion_tokens', 0) or 0
+                    total_tokens = usage_dict.get('total_tokens', 0) or (prompt_tokens + completion_tokens)
+                    
                     reasoning_tokens = 0
                     if 'completion_tokens_details' in usage_dict and isinstance(usage_dict['completion_tokens_details'], dict):
-                        reasoning_tokens = usage_dict['completion_tokens_details'].get('reasoning_tokens', 0)
-                    elif 'reasoning_tokens' in usage_dict:
-                        reasoning_tokens = usage_dict.get('reasoning_tokens', 0)
+                        reasoning_tokens = usage_dict['completion_tokens_details'].get('reasoning_tokens', 0) or 0
+                    elif 'reasoning_tokens' in usage_dict and usage_dict.get('reasoning_tokens') is not None:
+                        reasoning_tokens = usage_dict.get('reasoning_tokens', 0) or 0
+                    
+                    # For Google Gemini / OpenAI compatibility endpoints where thinking tokens are counted in total_tokens
+                    if reasoning_tokens == 0 and total_tokens > (prompt_tokens + completion_tokens):
+                        reasoning_tokens = total_tokens - (prompt_tokens + completion_tokens)
                         
-                    print(f"   └── [Token Usage] Prompt: {usage_dict.get('prompt_tokens', 0)} | Completion: {usage_dict.get('completion_tokens', 0)} | 🤔 Thinking: {reasoning_tokens}")
+                    print(f"   └── [Token Usage] Prompt: {prompt_tokens} | Completion: {completion_tokens} | 🤔 Thinking: {reasoning_tokens}")
                 except Exception:
                     pass
             

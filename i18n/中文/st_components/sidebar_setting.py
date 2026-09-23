@@ -17,12 +17,12 @@ def config_input(label, key, help=None, placeholder=None):
 
 def page_setting():
     with st.expander("LLM 模型配置", expanded=True):
-        config_input("API_KEY", "api.key")
-        config_input("BASE_URL", "api.base_url", help="OpenAI 兼容格式，将自动补充 /v1/chat/completions")
+        config_input("API_KEY", "api.key", placeholder="OpenAI / Google Gemini / DeepSeek API 密钥")
+        config_input("BASE_URL", "api.base_url", help="OpenAI 兼容格式（例如 https://api.openai.com/v1 或 https://generativelanguage.googleapis.com/v1beta/openai/）")
         
         c1, c2 = st.columns([4, 1])
         with c1:
-            config_input("模型 (MODEL)", "api.model", help="点击右侧按钮检查基础 API 有效性")
+            config_input("模型 (MODEL)", "api.model", help="例如 gpt-4o, gemini-3.8-flash, deepseek-chat 等。点击右侧按钮检查有效性")
         with c2:
             if st.button("📡", key="api_base_btn", help="测试基础 API 连通性"):
                 st.toast("基础 API 密钥有效" if check_api("base") else "基础 API 密钥无效", 
@@ -68,17 +68,17 @@ def page_setting():
                 if easy_tasks_effort != curr_easy:
                     update_key("reasoning.easy_tasks", easy_tasks_effort)
                     
-            st.caption("⚠️ **建议：** 翻译任务通常不建议使用 `high`，以兼顾响应速度与成本。")
+            st.caption("⚠️ **提示：** 对 Google Gemini、OpenAI o系列及 DeepSeek 等推理模型，系统将自动映射并传递推理深度。")
         else:
             # 困难任务配置区
             st.markdown("##### 🧠 困难任务专属模型")
             st.caption("负责：语义智能分句、ASR 术语纠错、意译与润色、智能标点还原")
             config_input("困难任务 API_KEY", "model_split.hard_tasks.key", placeholder="留空则自动继承基础 API_KEY")
-            config_input("困难任务 BASE_URL", "model_split.hard_tasks.base_url", placeholder="留空则自动继承基础 BASE_URL")
+            config_input("困难任务 BASE_URL", "model_split.hard_tasks.base_url", placeholder="例如 https://generativelanguage.googleapis.com/v1beta/openai/")
             
             hc1, hc2 = st.columns([4, 1])
             with hc1:
-                config_input("困难任务 MODEL", "model_split.hard_tasks.model", placeholder="例如 o3-mini, deepseek-reasoner 等")
+                config_input("困难任务 MODEL", "model_split.hard_tasks.model", placeholder="例如 gemini-3.8-flash, o3-mini, deepseek-reasoner 等")
             with hc2:
                 if st.button("📡", key="api_hard_btn", help="测试困难任务 API 连通性"):
                     st.toast("困难任务 API 有效" if check_api("hard") else "困难任务 API 无效", 
@@ -103,7 +103,7 @@ def page_setting():
             
             ec1, ec2 = st.columns([4, 1])
             with ec1:
-                config_input("简单任务 MODEL", "model_split.easy_tasks.model", placeholder="例如 gpt-4o-mini, deepseek-chat 等")
+                config_input("简单任务 MODEL", "model_split.easy_tasks.model", placeholder="例如 gemini-flash-latest, gpt-4o-mini, deepseek-chat 等")
             with ec2:
                 if st.button("📡", key="api_easy_btn", help="测试简单任务 API 连通性"):
                     st.toast("简单任务 API 有效" if check_api("easy") else "简单任务 API 无效", 

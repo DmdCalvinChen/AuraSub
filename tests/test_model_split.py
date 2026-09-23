@@ -6,7 +6,14 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.config_utils import load_key, update_key, is_sensitive_key
-from core.ask_gpt import check_is_hard_task, resolve_api_config, check_api, ask_gpt
+from core.ask_gpt import (
+    check_is_hard_task,
+    resolve_api_config,
+    check_api,
+    ask_gpt,
+    normalize_base_url,
+    check_llm_support_json
+)
 
 class TestModelSplitConfig(unittest.TestCase):
     @classmethod
@@ -30,6 +37,44 @@ class TestModelSplitConfig(unittest.TestCase):
         update_key("model_split.easy_tasks.model", cls._orig_easy_model)
         update_key("model_split.easy_tasks.base_url", cls._orig_easy_url)
         update_key("model_split.easy_tasks.reasoning_effort", cls._orig_easy_effort)
+
+    def test_normalize_base_url(self):
+        # Google AI Studio URL normalizations
+        self.assertEqual(
+            normalize_base_url("https://generativelanguage.googleapis.com/v1beta/openai/"),
+            "https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        self.assertEqual(
+            normalize_base_url("https://generativelanguage.googleapis.com/v1beta/openai"),
+            "https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        self.assertEqual(
+            normalize_base_url("https://generativelanguage.googleapis.com"),
+            "https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        self.assertEqual(
+            normalize_base_url("https://generativelanguage.googleapis.com/v1beta"),
+            "https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+        
+        # Standard OpenAI / other providers
+        self.assertEqual(
+            normalize_base_url("https://api.openai.com/v1"),
+            "https://api.openai.com/v1"
+        )
+        self.assertEqual(
+            normalize_base_url("https://api.deepseek.com"),
+            "https://api.deepseek.com/v1"
+        )
+
+    def test_check_llm_support_json(self):
+        self.assertTrue(check_llm_support_json("gemini-3.8-flash"))
+        self.assertTrue(check_llm_support_json("gemini-flash-latest"))
+        self.assertTrue(check_llm_support_json("gpt-4o"))
+        self.assertTrue(check_llm_support_json("deepseek-chat"))
+        self.assertTrue(check_llm_support_json("deepseek-reasoner"))
+        self.assertFalse(check_llm_support_json(""))
+        self.assertFalse(check_llm_support_json(None))
 
     def test_sensitive_keys_detection(self):
         self.assertTrue(is_sensitive_key("api.key"))
@@ -136,8 +181,8 @@ class TestModelSplitConfig(unittest.TestCase):
         
         # 1. Enable split mode
         update_key("model_split.enabled", True)
-        update_key("model_split.hard_tasks.model", "deepseek-reasoner")
-        update_key("model_split.hard_tasks.base_url", "https://api.deepseek.com/v1")
+        update_key("model_split.hard_tasks.model", "gemini-3.8-flash")
+        update_key("model_split.hard_tasks.base_url", "https://generativelanguage.googleapis.com/v1beta/openai/")
         update_key("model_split.hard_tasks.reasoning_effort", "high")
         
         update_key("model_split.easy_tasks.model", "deepseek-chat")
@@ -150,7 +195,7 @@ class TestModelSplitConfig(unittest.TestCase):
                 res_h = ask_gpt("chunk this text", response_json=True, log_title="logical_chunking")
                 self.assertEqual(res_h, {"status": "ok"})
                 call_kwargs_h = mock_client.chat.completions.create.call_args[1]
-                self.assertEqual(call_kwargs_h["model"], "deepseek-reasoner")
+                self.assertEqual(call_kwargs_h["model"], "gemini-3.8-flash")
                 self.assertEqual(call_kwargs_h["extra_body"], {"reasoning_effort": "high"})
                 
                 # Call easy task
@@ -158,8 +203,7 @@ class TestModelSplitConfig(unittest.TestCase):
                 self.assertEqual(res_e, {"status": "ok"})
                 call_kwargs_e = mock_client.chat.completions.create.call_args[1]
                 self.assertEqual(call_kwargs_e["model"], "deepseek-chat")
-                # When reasoning_effort is none, extra_body should not be injected
-                self.assertNotIn("extra_body", call_kwargs_e)
+                self.assertEqual(call_kwargs_e["extra_body"], {"reasoning_effort": "none"})
 
 if __name__ == "__main__":
     unittest.main()

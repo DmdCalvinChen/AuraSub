@@ -17,12 +17,12 @@ def config_input(label, key, help=None, placeholder=None):
 
 def page_setting():
     with st.expander("LLM Configuration", expanded=True):
-        config_input("API_KEY", "api.key")
-        config_input("BASE_URL", "api.base_url", help="Openai format, will add /v1/chat/completions automatically")
+        config_input("API_KEY", "api.key", placeholder="OpenAI / Google Gemini / DeepSeek API Key")
+        config_input("BASE_URL", "api.base_url", help="OpenAI format (e.g. https://api.openai.com/v1 or https://generativelanguage.googleapis.com/v1beta/openai/)")
         
         c1, c2 = st.columns([4, 1])
         with c1:
-            config_input("MODEL", "api.model", help="click to check API validity 👉")
+            config_input("MODEL", "api.model", help="e.g. gpt-4o, gemini-3.8-flash, deepseek-chat. Click 👉 to check validity")
         with c2:
             if st.button("📡", key="api_base_btn", help="Test Base API connection"):
                 st.toast("Base API Key is valid" if check_api("base") else "Base API Key is invalid", 
@@ -68,17 +68,17 @@ def page_setting():
                 if easy_tasks_effort != curr_easy:
                     update_key("reasoning.easy_tasks", easy_tasks_effort)
                     
-            st.caption("⚠️ **Tip:** Not recommended to use `high`. Translation tasks are not that complex.")
+            st.caption("⚠️ **Tip:** For Google Gemini, OpenAI o-series, and DeepSeek reasoners, reasoning effort is dynamically adjusted.")
         else:
             # Hard Tasks Section
             st.markdown("##### 🧠 Hard Tasks Model")
             st.caption("For Semantic Chunking, ASR Correction, Expressive Translation, Punctuation")
             config_input("Hard Tasks API_KEY", "model_split.hard_tasks.key", placeholder="Leave empty to use Base API_KEY")
-            config_input("Hard Tasks BASE_URL", "model_split.hard_tasks.base_url", placeholder="Leave empty to use Base BASE_URL")
+            config_input("Hard Tasks BASE_URL", "model_split.hard_tasks.base_url", placeholder="e.g. https://generativelanguage.googleapis.com/v1beta/openai/")
             
             hc1, hc2 = st.columns([4, 1])
             with hc1:
-                config_input("Hard Tasks MODEL", "model_split.hard_tasks.model", placeholder="e.g. o3-mini, deepseek-reasoner")
+                config_input("Hard Tasks MODEL", "model_split.hard_tasks.model", placeholder="e.g. gemini-3.8-flash, o3-mini, deepseek-reasoner")
             with hc2:
                 if st.button("📡", key="api_hard_btn", help="Test Hard Tasks API"):
                     st.toast("Hard Tasks API is valid" if check_api("hard") else "Hard Tasks API is invalid", 
@@ -103,7 +103,7 @@ def page_setting():
             
             ec1, ec2 = st.columns([4, 1])
             with ec1:
-                config_input("Easy Tasks MODEL", "model_split.easy_tasks.model", placeholder="e.g. gpt-4o-mini, deepseek-chat")
+                config_input("Easy Tasks MODEL", "model_split.easy_tasks.model", placeholder="e.g. gemini-flash-latest, gpt-4o-mini, deepseek-chat")
             with ec2:
                 if st.button("📡", key="api_easy_btn", help="Test Easy Tasks API"):
                     st.toast("Easy Tasks API is valid" if check_api("easy") else "Easy Tasks API is invalid", 
